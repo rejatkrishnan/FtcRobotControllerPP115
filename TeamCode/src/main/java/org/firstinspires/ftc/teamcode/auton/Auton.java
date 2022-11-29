@@ -21,12 +21,16 @@
 
 package org.firstinspires.ftc.teamcode.auton;
 
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -37,12 +41,14 @@ import java.util.ArrayList;
 
 @Autonomous
 
+
+
     public class Auton extends LinearOpMode {
 
-        private DcMotor leftRear = null;
-        private DcMotor rightRear = null;
-        private DcMotor leftFront = null;
-        private DcMotor rightFront = null;
+        private DcMotor frontLeft = null;
+        private DcMotor frontRight = null;
+        private DcMotor backLeft = null;
+        private DcMotor backRight = null;
 
 
         OpenCvCamera camera;
@@ -98,44 +104,36 @@ import java.util.ArrayList;
 
             telemetry.setMsTransmissionInterval(50);
 
-            leftFront = hardwareMap.get(DcMotor.class, "fl");
-            rightFront = hardwareMap.get(DcMotor.class, "fr");
-            leftRear = hardwareMap.get(DcMotor.class, "bl");
-            rightRear = hardwareMap.get(DcMotor.class, "br");
-
+            frontLeft = hardwareMap.get(DcMotor.class, "fl");
+            frontRight = hardwareMap.get(DcMotor.class, "fr");
+            backLeft = hardwareMap.get(DcMotor.class, "bl");
+            backRight = hardwareMap.get(DcMotor.class, "br");
+            DcMotor lift = hardwareMap.dcMotor.get("l");
+            DcMotor angle = hardwareMap.dcMotor.get("a");
+            CRServo grip1 = hardwareMap.get(CRServo.class, "g1");
+            CRServo grip2 = hardwareMap.get(CRServo.class, "g2");
+            RevBlinkinLedDriver blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "LED");
+            DigitalChannel digitalTouch;
+            digitalTouch = hardwareMap.get(DigitalChannel.class, "sensor_digital");
 
             // Most robots need the motor on one side to be reversed to drive forward
             // Reverse the motor that runs backwards when connected directly to the battery
-            leftFront.setDirection(DcMotor.Direction.REVERSE);
-
-            leftFront.setMode(RunMode.RUN_USING_ENCODER);
-            leftRear.setMode(RunMode.RUN_USING_ENCODER);
-            rightFront.setMode(RunMode.RUN_USING_ENCODER);
-            rightRear.setMode(RunMode.RUN_USING_ENCODER);
-
-            leftFront.setMode(RunMode.STOP_AND_RESET_ENCODER);
-            leftRear.setMode(RunMode.STOP_AND_RESET_ENCODER);
-            rightRear.setMode(RunMode.STOP_AND_RESET_ENCODER);
-            rightFront.setMode(RunMode.STOP_AND_RESET_ENCODER);
-
-            telemetry.addData("Starting at",  "%7d :%7d",
-                    leftFront.getCurrentPosition(),
-                    rightFront.getCurrentPosition());
-                    rightRear.getCurrentPosition();
-                    leftRear.getCurrentPosition();
+            digitalTouch.setMode(DigitalChannel.Mode.INPUT);
+            frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+            backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+            lift.setDirection(DcMotorSimple.Direction.REVERSE);
+            lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            lift.setTargetPosition(0);
+            lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            lift.setPower(1);
+            telemetry.setAutoClear(false);
+            Telemetry.Item liftPosition = telemetry.addData("Lift Position", lift.getCurrentPosition());
+            liftPosition.setValue(lift.getCurrentPosition());
             telemetry.update();
-
-           leftRear.setTargetPosition(0);
-           leftFront.setTargetPosition(0);
-           rightRear.setTargetPosition(0);
-           rightFront.setTargetPosition(0);
-
-           rightRear.setMode(RunMode.RUN_TO_POSITION);
-           rightFront.setMode(RunMode.RUN_TO_POSITION);
-           leftRear.setMode(RunMode.RUN_TO_POSITION);
-           leftFront.setMode(RunMode.RUN_TO_POSITION);
-
-
+            float driveSpeed = 0.75f; //sets drive motor speeds (between 0 and 1)
+            double armSpeedUp = 1;
+            double armSpeedDown = -0.4;
             /*
              * The INIT-loop:
              * This REPLACES waitForStart!
@@ -196,75 +194,32 @@ import java.util.ArrayList;
 
             /* Actually do something useful */
             if (tagOfInterest == null || tagOfInterest.id == LEFT) {
-                leftRear.setPower(0.3);
-                rightFront.setPower(0.3);
-                leftFront.setPower(0.3);
-                rightRear.setPower(0.3);
-                sleep(2250);
-                leftRear.setPower(0.0);
-                rightFront.setPower(0.0);
-                leftFront.setPower(0.0);
-                rightRear.setPower(0.0);
-                sleep(250);
-                leftRear.setPower(0.55);
-                rightFront.setPower(0.55);
-                leftFront.setPower(-0.15);
-                rightRear.setPower(-0.15);
-                sleep(4000);
-                leftRear.setPower(0.0);
-                rightFront.setPower(0.0);
-                leftFront.setPower(0.0);
-                rightRear.setPower(0.0);
-
-
+                angle.setPower(1);
+                sleep(1000);
 
             } else if (tagOfInterest.id == MIDDLE) {
-                leftRear.setPower(0.3);
-                rightFront.setPower(0.3);
-                leftFront.setPower(0.3);
-                rightRear.setPower(0.3);
-                sleep(2250);
-                leftRear.setPower(0.0);
-                rightFront.setPower(0.0);
-                leftFront.setPower(0.0);
-                rightRear.setPower(0.0);
+                angle.setPower(1);
+                sleep(1000);
+
             } else {
-                leftRear.setPower(0.3);
-                rightFront.setPower(0.3);
-                leftFront.setPower(0.3);
-                rightRear.setPower(0.3);
-                sleep(2250);
-                leftRear.setPower(0.0);
-                rightFront.setPower(0.0);
-                leftFront.setPower(0.0);
-                rightRear.setPower(0.0);
-                sleep(250);
-                leftRear.setPower(-0.55);
-                rightFront.setPower(-0.55);
-                leftFront.setPower(0.15);
-                rightRear.setPower(0.15);
-                sleep(3000);
-                leftRear.setPower(0.0);
-                rightFront.setPower(0.0);
-                leftFront.setPower(0.0);
-                rightRear.setPower(0.0);
-            }
+                angle.setPower(1);
+                sleep(1000);
 
 
 
-            while (opModeIsActive()) {
+            }while (opModeIsActive()) {
                 sleep(20);
             }
         }
 
         void tagToTelemetry(AprilTagDetection detection) {
-            telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
-            telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x * FEET_PER_METER));
-            telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y * FEET_PER_METER));
-            telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z * FEET_PER_METER));
-            telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
-            telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
-            telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
+            //telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
+            //telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x * FEET_PER_METER));
+            //telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y * FEET_PER_METER));
+            //telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z * FEET_PER_METER));
+            //telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
+            //telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
+            //telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
         }
 
 
